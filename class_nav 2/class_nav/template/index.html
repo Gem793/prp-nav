@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Class Nav</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #f0f4f8);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 40px;
+  }
+  .navigator-container {
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    width: 100%;
+    max-width: 700px;
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+  }
+  label {
+    display: block;
+    text-align: left;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #555;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  input[type="text"]:focus {
+    border-color: #4a90e2;
+    outline: none;
+  }
+  button {
+    background: #4a90e2;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    margin-top: 10px;
+  }
+  button:hover {
+    background: #357ABD;
+    transform: translateY(-2px);
+  }
+  #pathImg {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-top: 20px;
+  }
+  #floorNav {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="navigator-container">
+  <h2>🏫 Class Nav</h2>
+  
+  <label>Start Room:
+    <input type="text" id="start" placeholder="Enter start room (e.g. G12)">
+  </label>
+
+  <label>End Room:
+    <input type="text" id="end" placeholder="Enter end room (e.g. F201)">
+  </label>
+
+  <button onclick="getPath()">Find Path</button>
+
+  <div id="floorNav">
+    <button id="prevFloor" style="display:none;" onclick="prevFloor()">⬅ Previous Floor</button>
+    <button id="nextFloor" style="display:none;" onclick="nextFloor()">Next Floor ➡</button>
+  </div>
+
+  <img id="pathImg" src="" alt="Path will appear here">
+</div>
+
+<script>
+let floorImages = [];
+let currentFloor = 0;
+
+async function getPath() {
+  const start = document.getElementById("start").value.trim();
+  const end = document.getElementById("end").value.trim();
+
+  if (!start || !end) {
+    alert("Enter both start and end rooms.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:5000/get_path", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ start, end })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      alert("Error: " + (err.error || "Path not found"));
+      return;
+    }
+
+    // The backend sends ONE image; display it directly
+    const blob = await response.blob();
+    const imgUrl = URL.createObjectURL(blob);
+    document.getElementById("pathImg").src = imgUrl;
+
+    // Hide multi-floor controls since we’re using a combined image
+    document.getElementById("nextFloor").style.display = "none";
+    document.getElementById("prevFloor").style.display = "none";
+
+  } catch (err) {
+    console.error(err);
+    alert("⚠️ Failed to fetch path. Make sure Flask is running on http://127.0.0.1:5000/");
+  }
+}
+</script>
+</body>
+</html>
+
+
+
